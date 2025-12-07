@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Instructor Dashboard - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="dashboard-header">
+        <h1>Instructor Dashboard</h1>
+        <a href="{% url 'courses:create' %}" class="btn btn-primary">Create New Course</a>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <h3>{{ courses_count }}</h3>
+            <p>Total Courses</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ published_courses }}</h3>
+            <p>Published</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ draft_courses }}</h3>
+            <p>Drafts</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ total_students }}</h3>
+            <p>Total Students</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ total_enrollments }}</h3>
+            <p>Total Enrollments</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ completion_rate }}%</h3>
+            <p>Completion Rate</p>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="courses-section">
+            <h2>Your Courses</h2>
+            <div class="courses-list">
+                {% for course in instructor_courses %}
+                    <div class="course-item">
+                        <h3><a href="{% url 'courses:detail' course.slug %}">{{ course.title }}</a></h3>
+                        <p>Status: {{ course.get_status_display }}</p>
+                        <p>Students: {{ course.enrolled_count }}</p>
+                        <div class="course-actions">
+                            <a href="{% url 'courses:manage' course.slug %}" class="btn btn-sm">Manage</a>
+                            <a href="{% url 'courses:edit' course.slug %}" class="btn btn-sm">Edit</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>You haven't created any courses yet. <a href="{% url 'courses:create' %}">Create your first course</a>!</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if courses_with_stats %}
+            <div class="courses-stats-section">
+                <h2>Course Performance</h2>
+                <div class="courses-stats-list">
+                    {% for stat in courses_with_stats %}
+                        <div class="course-stat-item">
+                            <h3><a href="{% url 'courses:detail' stat.course.slug %}">{{ stat.course.title }}</a></h3>
+                            <p>Average Progress: {{ stat.avg_progress }}%</p>
+                            <p>Completion Rate: {{ stat.completion_rate }}%</p>
+                            <p>Completed: {{ stat.completed_count }} / {{ stat.total_enrollments }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="recent-students">
+            <h2>Recent Students</h2>
+            <ul class="students-list">
+                {% for enrollment in recent_students %}
+                    <li>
+                        <strong>{{ enrollment.user.get_full_name|default:enrollment.user.username }}</strong>
+                        enrolled in <a href="{% url 'courses:detail' enrollment.course.slug %}">{{ enrollment.course.title }}</a>
+                        <span class="enrollment-date">{{ enrollment.enrolled_at|date:"M d, Y" }}</span>
+                        <span class="progress-info">Progress: {{ enrollment.progress }}%</span>
+                    </li>
+                {% empty %}
+                    <li>No students yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage {{ course.title }} - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="manage-header">
+        <h1>Manage Course: {{ course.title }}</h1>
+        <a href="{% url 'courses:detail' course.slug %}" class="btn btn-secondary">View Course</a>
+    </div>
+
+    <div class="lessons-management">
+        <div class="section-header">
+            <h2>Manage Lessons</h2>
+            <p class="section-subtitle">Add video lessons to your course. Videos will play directly in the app.</p>
+        </div>
+        <form method="post" enctype="multipart/form-data" class="lesson-form premium-form">
+            {% csrf_token %}
+            <input type="hidden" name="lesson_id" id="lesson_id" value="">
+            <div class="form-group">
+                <label for="title">Lesson Title</label>
+                <input type="text" name="title" id="title" required>
+            </div>
+            <div class="form-group">
+                <label for="content">Content</label>
+                <textarea name="content" id="content" rows="10" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="order">Order</label>
+                <input type="number" name="order" id="order" value="{{ lessons.count|add:1 }}" min="1">
+            </div>
+            <div class="form-group">
+                <label for="video_url">Video URL <span class="optional-badge">(Optional)</span></label>
+                <input type="url" name="video_url" id="video_url" placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID">
+                <small class="form-help">
+                    <strong>Supported formats:</strong><br>
+                    • YouTube: https://www.youtube.com/watch?v=VIDEO_ID<br>
+                    • YouTube Short: https://youtu.be/VIDEO_ID<br>
+                    • Direct video URL (MP4, WebM, etc.)<br>
+                    <em>Videos will play directly in the app without redirecting to external sites.</em>
+                </small>
+            </div>
+            <div class="form-group">
+                <label for="resources">Resources (optional)</label>
+                <input type="file" name="resources" id="resources">
+            </div>
+            <button type="submit" class="btn btn-primary">Add/Update Lesson</button>
+            <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+        </form>
+
+        <div class="lessons-list">
+            <h3>Existing Lessons</h3>
+            {% for lesson in lessons %}
+                <div class="lesson-item">
+                    <div class="lesson-info">
+                        <strong>{{ lesson.order }}. {{ lesson.title }}</strong>
+                        <p>{{ lesson.content|truncatewords:20 }}</p>
+                        {% if lesson.video_url %}
+                            <span class="video-indicator">🎥 Video Available</span>
+                        {% else %}
+                            <span class="no-video-indicator">No Video</span>
+                        {% endif %}
+                    </div>
+                    <div class="lesson-actions">
+                        <button onclick="editLesson({{ lesson.id }}, '{{ lesson.title }}', '{{ lesson.content|escapejs }}', {{ lesson.order }}, '{{ lesson.video_url|default:"" }}')" class="btn btn-sm">Edit</button>
+                        <a href="?delete={{ lesson.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                        {% if not forloop.first %}
+                            <a href="?reorder={{ lesson.id }}&direction=up" class="btn btn-sm">↑</a>
+                        {% endif %}
+                        {% if not forloop.last %}
+                            <a href="?reorder={{ lesson.id }}&direction=down" class="btn btn-sm">↓</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p>No lessons yet. Add your first lesson above.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function editLesson(id, title, content, order, videoUrl) {
+    document.getElementById('lesson_id').value = id;
+    document.getElementById('title').value = title;
+    document.getElementById('content').value = content;
+    document.getElementById('order').value = order;
+    document.getElementById('video_url').value = videoUrl || '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearForm() {
+    document.getElementById('lesson_id').value = '';
+    document.getElementById('title').value = '';
+    document.getElementById('content').value = '';
+    document.getElementById('order').value = {{ lessons.count|add:1 }};
+    document.getElementById('video_url').value = '';
+    document.getElementById('resources').value = '';
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,256 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduLearnPro - Online Learning Platform{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+    /* Critical nav visibility overrides */
+    .navbar .container {
+        position: relative;
+        gap: 0.5rem;
+    }
+    /* Burger button - fixed size, no responsive changes */
+    .nav-toggle {
+        display: inline-flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 60px !important;
+        height: 60px !important;
+        margin-left: auto;
+        position: relative;
+        right: 0;
+        top: 0;
+        transform: none;
+        z-index: 9999 !important;
+        background: repeating-linear-gradient(
+            135deg,
+            #1f2236 0,
+            #1f2236 8px,
+            #252845 8px,
+            #252845 16px
+        );
+        border: 5px solid #141626 !important;
+        border-radius: 16px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+        padding: 12px;
+        gap: 7px;
+        flex-shrink: 0;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+        transition: all 0.3s ease;
+        outline: none !important;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+        user-select: none;
+    }
+    .nav-toggle:active {
+        transform: scale(0.95);
+    }
+    .nav-toggle:hover {
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.4);
+    }
+    .nav-toggle span {
+        width: 70%;
+        height: 5px !important;
+        background: #f7f8ff;
+        border-radius: 999px;
+        display: block;
+    }
+    .navbar .nav-brand a {
+        padding-right: 70px; /* leave room for toggle */
+    }
+    @media (max-width: 900px) {
+        .nav-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .nav-menu {
+            display: none !important;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 0.75rem;
+            padding-top: 0.25rem;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--bg-glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-md);
+            z-index: 1100;
+        }
+        .nav-menu.open {
+            display: flex !important;
+        }
+    }
+    @media (min-width: 901px) {
+        .nav-toggle {
+            display: none !important;
+        }
+    }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="{% url 'home' %}">EduLearnPro</a>
+            </div>
+            <button type="button" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'courses:list' %}">Courses</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'enrollments:my-courses' %}">My Courses</a></li>
+                    {% if user.role == 'instructor' %}
+                        <li><a href="{% url 'courses:instructor-dashboard' %}">Dashboard</a></li>
+                    {% else %}
+                        <li><a href="{% url 'users:student_dashboard' %}">Dashboard</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'users:profile' %}">Profile</a></li>
+                    <li><a href="{% url 'users:logout' %}">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'users:login' %}">Login</a></li>
+                    <li><a href="{% url 'users:register' %}">Register</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="messages-container">
+            <div class="container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <!-- Copyright removed - handled in page-specific footers -->
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+    // Force nav toggle to work - multiple approaches
+    (function() {
+        function setupNavToggle() {
+            const toggle = document.querySelector('.nav-toggle');
+            const menu = document.querySelector('.nav-menu');
+            
+            if (!toggle) {
+                console.error('Nav toggle button not found!');
+                return;
+            }
+            
+            if (!menu) {
+                console.error('Nav menu not found!');
+                return;
+            }
+            
+            console.log('Setting up nav toggle...');
+            
+            // Make absolutely sure button is clickable
+            toggle.style.pointerEvents = 'auto';
+            toggle.style.cursor = 'pointer';
+            toggle.style.zIndex = '9999';
+            
+            // Remove all existing event listeners by cloning
+            const newToggle = toggle.cloneNode(true);
+            toggle.parentNode.replaceChild(newToggle, toggle);
+            const newMenu = document.querySelector('.nav-menu');
+            
+            // Multiple event handlers for maximum compatibility
+            function toggleMenu(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+                
+                const isOpen = newMenu.classList.contains('open');
+                
+                if (isOpen) {
+                    newMenu.classList.remove('open');
+                    newToggle.classList.remove('is-open');
+                    newToggle.setAttribute('aria-expanded', 'false');
+                    console.log('✓ Menu closed');
+                } else {
+                    newMenu.classList.add('open');
+                    newToggle.classList.add('is-open');
+                    newToggle.setAttribute('aria-expanded', 'true');
+                    console.log('✓ Menu opened');
+                }
+                
+                return false;
+            }
+            
+            // Try multiple event types
+            newToggle.onclick = toggleMenu;
+            newToggle.addEventListener('click', toggleMenu, true);
+            newToggle.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                toggleMenu(e);
+            }, true);
+            
+            // Close menu when clicking links
+            newMenu.querySelectorAll('a').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    newMenu.classList.remove('open');
+                    newToggle.classList.remove('is-open');
+                    newToggle.setAttribute('aria-expanded', 'false');
+                });
+            });
+            
+            // Test click
+            console.log('Nav toggle setup complete. Button should be clickable now.');
+            console.log('Button element:', newToggle);
+            console.log('Button computed style display:', window.getComputedStyle(newToggle).display);
+            console.log('Button computed style pointer-events:', window.getComputedStyle(newToggle).pointerEvents);
+        }
+        
+        // Try multiple times to ensure it works
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupNavToggle);
+        } else {
+            setupNavToggle();
+        }
+        
+        // Also try after a short delay as backup
+        setTimeout(setupNavToggle, 100);
+    })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

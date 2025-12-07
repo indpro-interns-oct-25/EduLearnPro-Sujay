@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lesson.title }} - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="lesson-layout">
+        <button class="btn btn-secondary d-lg-none mb-3" data-sidebar-toggle aria-expanded="false">
+            Toggle Lessons
+        </button>
+        <div class="lesson-sidebar">
+            <h3>{{ course.title }}</h3>
+            <ul class="lessons-sidebar-list">
+                {% for item in lessons_with_progress %}
+                    <li class="{% if item.is_current %}active{% endif %} {% if item.progress and item.progress.completed %}completed{% endif %}">
+                        <a href="{% url 'courses:lesson' course.slug item.lesson.pk %}">
+                            {{ item.lesson.order }}. {{ item.lesson.title }}
+                            {% if item.progress and item.progress.completed %}
+                                <span class="checkmark">✓</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="lesson-main">
+            <div class="lesson-header">
+                <h1>{{ lesson.title }}</h1>
+                <div class="lesson-navigation">
+                    {% if prev_lesson %}
+                        <a href="{% url 'courses:lesson' course.slug prev_lesson.pk %}" class="btn btn-secondary">← Previous</a>
+                    {% endif %}
+                    {% if next_lesson %}
+                        <a href="{% url 'courses:lesson' course.slug next_lesson.pk %}" class="btn btn-primary">Next →</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="lesson-content">
+                {% if lesson.video_url %}
+                    {% if enrollment or is_instructor_owner %}
+                        <div class="lesson-video">
+                            {% if lesson.get_embed_url %}
+                                <iframe 
+                                    src="{{ lesson.get_embed_url }}" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                    allowfullscreen
+                                    loading="lazy"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    class="video-fluid">
+                                </iframe>
+                            {% else %}
+                                <div class="video-error">
+                                    <p>Unable to load video. Please check the video URL: {{ lesson.video_url }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="lesson-video locked">
+                            <div class="video-locked-message">
+                                <h3>🔒 Video Locked</h3>
+                                <p>You must enroll in this course to access the video content.</p>
+                                <a href="{% url 'courses:detail' course.slug %}" class="btn btn-primary">Enroll Now</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+
+                <div class="lesson-text">
+                    {{ lesson.content|linebreaks }}
+                </div>
+
+                {% if lesson.resources %}
+                    <div class="lesson-resources">
+                        <h3>Resources</h3>
+                        <a href="{{ lesson.resources.url }}" download class="btn btn-secondary">Download Resources</a>
+                    </div>
+                {% endif %}
+
+                {% if enrollment and not is_instructor_owner %}
+                    <div class="lesson-progress">
+                        <form method="post" action="{% url 'enrollments:mark-lesson-complete' lesson.id %}">
+                            {% csrf_token %}
+                            <label>
+                                <input type="checkbox" name="completed" {% if is_completed %}checked{% endif %} onchange="this.form.submit()">
+                                Mark as completed
+                            </label>
+                        </form>
+                        <div class="course-progress">
+                            <p>Course Progress: {{ course_progress_percentage }}%</p>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ course_progress_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

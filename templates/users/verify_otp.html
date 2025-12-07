@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify OTP - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="auth-page">
+        <div class="auth-card">
+            <h1>Verify OTP</h1>
+            <p class="form-intro">Enter the 6-digit OTP sent to {{ email }}</p>
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                {{ form.email }}
+                {% if form.errors %}
+                    <div class="form-errors">
+                        <ul>
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                <div class="form-group">
+                    <label for="{{ form.otp.id_for_label }}">OTP</label>
+                    {{ form.otp }}
+                    {% if form.otp.help_text %}
+                        <small class="form-help">{{ form.otp.help_text }}</small>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Verify OTP</button>
+            </form>
+            <p class="auth-links">
+                <a href="{% url 'users:password_reset' %}">Resend OTP</a>
+            </p>
+            <p class="auth-links">
+                <a href="{% url 'users:login' %}">Back to Login</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

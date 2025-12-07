@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="profile-page-wrapper">
+    <div class="container">
+        <div class="profile-header-section">
+            <div class="profile-avatar">
+                {% if user.profile and user.profile.profile_photo %}
+                    <img src="{{ user.profile.profile_photo.url }}" alt="Profile Photo" class="profile-photo-img">
+                {% else %}
+                    <div class="avatar-circle">
+                        <span>{{ user.first_name|first|default:user.username|first|upper }}{{ user.last_name|first|default:""|upper }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="profile-header-info">
+                <h1>{{ user.get_full_name|default:user.username }}</h1>
+                <p class="profile-email">{{ user.email }}</p>
+                {% if user.profile.role %}
+                    <span class="profile-badge">{{ user.profile.get_role_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-card-header">
+                <h2>Edit Profile</h2>
+                <p>Update your personal information and preferences</p>
+            </div>
+            
+            <form method="post" class="profile-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <div class="form-errors">
+                        <ul>
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                
+                <div class="profile-form-grid">
+                    <!-- Profile Photo - Compact -->
+                    <div class="form-group profile-photo-group">
+                        <label for="{{ form.profile_photo.id_for_label }}">{{ form.profile_photo.label }}{% if not form.profile_photo.field.required %} <span class="optional-text">(Optional)</span>{% endif %}</label>
+                        <div class="profile-photo-upload-compact">
+                            <div class="photo-preview-wrapper">
+                                {% if user.profile.profile_photo and user.profile.profile_photo.url %}
+                                    <img src="{{ user.profile.profile_photo.url }}" alt="Current Photo" class="photo-preview-small" id="photoPreview">
+                                {% else %}
+                                    <div class="photo-placeholder" id="photoPreview">
+                                        <span>{{ user.first_name|first|default:user.username|first|upper }}{{ user.last_name|first|default:""|upper }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="photo-upload-control">
+                                <label for="{{ form.profile_photo.id_for_label }}" class="photo-upload-btn">
+                                    <span>Choose Photo</span>
+                                    {{ form.profile_photo }}
+                                </label>
+                                <small class="form-help">JPG, PNG (max 5MB)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Left Side: First Name, Email, Gender -->
+                    <div class="form-group">
+                        <label for="{{ form.first_name.id_for_label }}">First Name <span class="required-text">*</span></label>
+                        {{ form.first_name }}
+                        {% if form.first_name.help_text %}
+                            <small class="form-help">{{ form.first_name.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Right Side: Last Name -->
+                    <div class="form-group">
+                        <label for="{{ form.last_name.id_for_label }}">Last Name <span class="required-text">*</span></label>
+                        {{ form.last_name }}
+                        {% if form.last_name.help_text %}
+                            <small class="form-help">{{ form.last_name.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Left Side: Email -->
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}">Email <span class="required-text">*</span></label>
+                        {{ form.email }}
+                        {% if form.email.help_text %}
+                            <small class="form-help">{{ form.email.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Right Side: Date of Birth -->
+                    <div class="form-group">
+                        <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth{% if not form.date_of_birth.field.required %} <span class="optional-text">(Optional)</span>{% endif %}</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.help_text %}
+                            <small class="form-help">{{ form.date_of_birth.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Left Side: Gender -->
+                    <div class="form-group">
+                        <label for="{{ form.gender.id_for_label }}">Gender <span class="required-text">*</span></label>
+                        {{ form.gender }}
+                        {% if form.gender.help_text %}
+                            <small class="form-help">{{ form.gender.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Right Side: Course / Year -->
+                    <div class="form-group">
+                        <label for="{{ form.course_year.id_for_label }}">Course / Year{% if not form.course_year.field.required %} <span class="optional-text">(Optional)</span>{% endif %}</label>
+                        {{ form.course_year }}
+                        {% if form.course_year.help_text %}
+                            <small class="form-help">{{ form.course_year.help_text }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    {% if user.profile.role == 'instructor' %}
+                        <a href="{% url 'users:instructor_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    {% else %}
+                        <a href="{% url 'users:student_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Photo preview functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const photoInput = document.querySelector('input[type="file"][name="profile_photo"]');
+        const photoPreview = document.getElementById('photoPreview');
+        
+        if (photoInput && photoPreview) {
+            photoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        // If it's an img tag, update src
+                        if (photoPreview.tagName === 'IMG') {
+                            photoPreview.src = e.target.result;
+                        } else {
+                            // If it's a placeholder div, replace with img
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'photo-preview-small';
+                            img.alt = 'Preview';
+                            photoPreview.parentNode.replaceChild(img, photoPreview);
+                            img.id = 'photoPreview';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+

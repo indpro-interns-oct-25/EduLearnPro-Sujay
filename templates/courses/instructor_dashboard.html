@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Instructor Dashboard - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="instructor-dashboard-page">
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header-section">
+            <div class="dashboard-header-content">
+                <h1 class="dashboard-title">Instructor Dashboard</h1>
+                <p class="dashboard-subtitle">Manage your courses and track your teaching progress</p>
+            </div>
+            <a href="{% url 'courses:create' %}" class="btn btn-primary">
+                <span>+</span> Create New Course
+            </a>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="dashboard-stats-grid">
+            <div class="dashboard-stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ courses_count }}</div>
+                    <div class="stat-label">Total Courses</div>
+                </div>
+            </div>
+
+            <div class="dashboard-stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ total_students }}</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+            </div>
+
+            <div class="dashboard-stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <path d="M20 8v6M23 11h-6"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ instructor_courses|length }}</div>
+                    <div class="stat-label">Active Courses</div>
+                </div>
+            </div>
+
+            <div class="dashboard-stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">${{ total_earnings|default:0 }}</div>
+                    <div class="stat-label">Total Earnings</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="dashboard-main-content">
+            <!-- Courses Section -->
+            <div class="dashboard-section">
+                <div class="section-header-dashboard">
+                    <h2 class="section-title-dashboard">Your Courses</h2>
+                    <span class="section-count">{{ instructor_courses|length }} course{{ instructor_courses|length|pluralize }}</span>
+                </div>
+
+                {% if instructor_courses %}
+                    <div class="dashboard-courses-grid">
+                        {% for course in instructor_courses %}
+                            <div class="dashboard-course-card">
+                                <div class="course-card-image">
+                                    {% if course.thumbnail %}
+                                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                                    {% else %}
+                                        <div class="course-placeholder">No Image</div>
+                                    {% endif %}
+                                    <div class="course-status-badge status-{{ course.status }}">
+                                        {{ course.get_status_display }}
+                                    </div>
+                                </div>
+                                <div class="course-card-content">
+                                    <h3 class="course-card-title">
+                                        <a href="{% url 'courses:detail' course.slug %}">{{ course.title }}</a>
+                                    </h3>
+                                    <p class="course-card-description">{{ course.description|truncatewords:20|default:"No description available." }}</p>
+                                    <div class="course-card-meta">
+                                        <div class="meta-item">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                                <circle cx="9" cy="7" r="4"/>
+                                            </svg>
+                                            <span>{{ course.enrolled_count|default:0 }} students</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                            </svg>
+                                            <span>{{ course.lessons.count }} lessons</span>
+                                        </div>
+                                    </div>
+                                    <div class="course-card-actions">
+                                        <a href="{% url 'courses:detail' course.slug %}" class="btn btn-sm btn-primary">View</a>
+                                        <a href="{% url 'courses:manage' course.slug %}" class="btn btn-sm btn-secondary">Manage</a>
+                                        <a href="{% url 'courses:edit' course.slug %}" class="btn btn-sm btn-secondary">Edit</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state-card">
+                        <div class="empty-state-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        <h3 class="empty-state-title">No courses yet</h3>
+                        <p class="empty-state-text">Start your teaching journey by creating your first course!</p>
+                        <a href="{% url 'courses:create' %}" class="btn btn-primary">Create Your First Course</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Students Section -->
+            {% if recent_students %}
+            <div class="dashboard-section">
+                <div class="section-header-dashboard">
+                    <h2 class="section-title-dashboard">Recent Students</h2>
+                    <span class="section-count">{{ recent_students|length }} recent</span>
+                </div>
+                <div class="recent-students-card">
+                    <ul class="students-list">
+                        {% for enrollment in recent_students %}
+                            <li class="student-item">
+                                <div class="student-info">
+                                    <div class="student-avatar">
+                                        {% if enrollment.user.profile.profile_photo %}
+                                            <img src="{{ enrollment.user.profile.profile_photo.url }}" alt="{{ enrollment.user.get_full_name|default:enrollment.user.username }}">
+                                        {% else %}
+                                            <span>{{ enrollment.user.get_full_name|default:enrollment.user.username|first|upper }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="student-details">
+                                        <strong class="student-name">{{ enrollment.user.get_full_name|default:enrollment.user.username }}</strong>
+                                        <span class="student-enrollment">enrolled in <a href="{% url 'courses:detail' enrollment.course.slug %}">{{ enrollment.course.title }}</a></span>
+                                    </div>
+                                </div>
+                                <span class="enrollment-date">{{ enrollment.enrolled_at|date:"M d, Y" }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

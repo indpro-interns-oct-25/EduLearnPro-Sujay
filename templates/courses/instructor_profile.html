@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ instructor.get_full_name|default:instructor.username }} - Instructor{% endblock %}
+
+{% block content %}
+<div class="instructor-profile-page">
+    <div class="container">
+        <!-- Instructor Header -->
+        <div class="instructor-header-card">
+            <div class="instructor-avatar-large">
+                {% if instructor.profile.profile_photo %}
+                    <img src="{{ instructor.profile.profile_photo.url }}" alt="{{ instructor.get_full_name|default:instructor.username }}" class="avatar-photo">
+                {% else %}
+                    <span class="avatar-initials">{{ instructor.get_full_name|default:instructor.username|first|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="instructor-header-info">
+                <h1 class="instructor-name-large">{{ instructor.get_full_name|default:instructor.username }}</h1>
+                <p class="instructor-role-text">Instructor at EduLearnPro</p>
+                <div class="instructor-stats-grid">
+                    <div class="instructor-stat-card">
+                        <div class="stat-value-large">{{ total_courses }}</div>
+                        <div class="stat-label-large">Courses</div>
+                    </div>
+                    <div class="instructor-stat-card">
+                        <div class="stat-value-large">{{ total_students }}</div>
+                        <div class="stat-label-large">Students</div>
+                    </div>
+                    <div class="instructor-stat-card">
+                        <div class="stat-value-large">{{ total_enrollments }}</div>
+                        <div class="stat-label-large">Enrollments</div>
+                    </div>
+                    {% if avg_rating %}
+                    <div class="instructor-stat-card">
+                        <div class="stat-value-large">{{ avg_rating|floatformat:1 }}</div>
+                        <div class="stat-label-large">Rating</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses Section -->
+        <div class="instructor-courses-section">
+            <h2 class="section-heading-main">Courses by {{ instructor.get_full_name|default:instructor.username }}</h2>
+            {% if instructor_courses %}
+                <div class="courses-grid">
+                    {% for course in instructor_courses %}
+                        <div class="course-card">
+                            <div class="course-image">
+                                {% if course.thumbnail %}
+                                    <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                                {% else %}
+                                    <div class="course-placeholder">No Image</div>
+                                {% endif %}
+                            </div>
+                            <div class="course-content">
+                                <h3><a href="{% url 'courses:detail' course.slug %}">{{ course.title }}</a></h3>
+                                <p class="course-description">{{ course.description|truncatewords:20 }}</p>
+                                <div class="course-meta">
+                                    <span class="course-level">{{ course.get_level_display }}</span>
+                                    <span class="course-price">
+                                        {% if course.discounted_price and course.discounted_price < course.price %}
+                                            <span class="price-old">₹{{ course.price|floatformat:2 }}</span>
+                                            ₹{{ course.discounted_price|floatformat:2 }}
+                                        {% else %}
+                                            ₹{{ course.price|floatformat:2 }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="course-stats">
+                                    <span>{{ course.lessons.count }} lessons</span>
+                                    <span>{{ course.enrolled_count|default:0 }} students</span>
+                                </div>
+                                <a href="{% url 'courses:detail' course.slug %}" class="btn btn-sm btn-primary">View Course</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-courses-message">
+                    <p>No courses available yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

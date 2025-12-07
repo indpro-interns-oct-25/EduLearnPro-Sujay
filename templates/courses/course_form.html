@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="course-form-page">
+    <div class="container">
+        <div class="form-header">
+            <h1>{{ page_title }}</h1>
+            <p class="form-subtitle">Create an engaging course that helps students achieve their goals</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="course-form premium-form">
+            {% csrf_token %}
+
+            <div class="form-section">
+                <h2 class="section-title">Basic Information</h2>
+                
+                <div class="form-group">
+                    <label for="{{ form.title.id_for_label }}">Course Title <span class="required">*</span></label>
+                    {{ form.title }}
+                    {% if form.title.help_text %}
+                        <small class="form-help">{{ form.title.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.description.id_for_label }}">Course Description <span class="optional-badge">(Optional)</span></label>
+                    {{ form.description }}
+                    {% if form.description.help_text %}
+                        <small class="form-help">{{ form.description.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.learning_outcomes.id_for_label }}">Learning Outcomes</label>
+                    {{ form.learning_outcomes }}
+                    <small class="form-help">List what students will learn from this course (one per line or use bullet points)</small>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Course Details</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.category.id_for_label }}">Category <span class="required">*</span></label>
+                        {{ form.category }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.level.id_for_label }}">Level</label>
+                        {{ form.level }}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.duration.id_for_label }}">Duration</label>
+                        {{ form.duration }}
+                        <small class="form-help">e.g., "6 weeks", "10 hours", "4 months"</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.status.id_for_label }}">Status</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.thumbnail.id_for_label }}">Course Thumbnail</label>
+                    {{ form.thumbnail }}
+                    {% if form.thumbnail.help_text %}
+                        <small class="form-help">{{ form.thumbnail.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.promo_video_url.id_for_label }}">Course Preview Video URL <span class="optional-badge">(Optional)</span></label>
+                    {{ form.promo_video_url }}
+                    <small class="form-help">
+                        <strong>Supported formats:</strong><br>
+                        • YouTube: https://www.youtube.com/watch?v=VIDEO_ID<br>
+                        • YouTube Short: https://youtu.be/VIDEO_ID<br>
+                        • Direct video URL (MP4, WebM, etc.)<br>
+                        <em>This video will be displayed as a preview on the course detail page.</em>
+                    </small>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">Pricing</h2>
+                <p class="form-help" style="margin-bottom: 20px; color: #666;">All courses must be paid courses. Price is required.</p>
+                
+                <div class="form-row pricing-row" id="pricingFields">
+                    <div class="form-group">
+                        <label for="{{ form.price.id_for_label }}">Regular Price (₹) <span class="required">*</span></label>
+                        {{ form.price }}
+                        <small class="form-help">Minimum price: ₹0.01</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.discounted_price.id_for_label }}">Discounted Price (₹)</label>
+                        {{ form.discounted_price }}
+                        <small class="form-help">Leave empty or same as regular price if no discount</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">{{ submit_label }}</button>
+                <a href="{% url 'courses:list' %}" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

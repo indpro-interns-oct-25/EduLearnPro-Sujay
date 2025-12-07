@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.title }} - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="course-detail-page">
+    <div class="course-content-wrapper">
+        <div class="container">
+            <!-- Course Header -->
+            <div class="course-header">
+                <div class="course-badge">{{ course.get_category_display }}</div>
+                <h1 class="course-main-title">{{ course.title }}</h1>
+                {% if course.description %}
+                <p class="course-description-short">{{ course.description|truncatewords:40 }}</p>
+                {% endif %}
+                <div class="course-meta-info">
+                    <div class="meta-item">
+                        <span class="meta-label">Instructor:</span>
+                        <a href="{% url 'courses:instructor_profile' course.instructor.username %}" class="meta-link">
+                            {{ course.instructor.get_full_name|default:course.instructor.username }}
+                        </a>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Level:</span>
+                        <span>{{ course.get_level_display }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Lessons:</span>
+                        <span>{{ lessons.count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="course-layout">
+                <!-- Main Content -->
+                <div class="course-main">
+                    <!-- Preview Video -->
+                    {% if course.promo_video_url %}
+                    <div class="preview-section">
+                        <h3 class="section-heading">Course Preview</h3>
+                        <div class="video-wrapper">
+                            {% if is_enrolled or is_instructor_owner %}
+                            {% if course.get_promo_video_embed_url %}
+                                    <iframe 
+                                        src="{{ course.get_promo_video_embed_url }}" 
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                        allowfullscreen
+                                        class="preview-video video-fluid"
+                                        loading="lazy"
+                                        referrerpolicy="strict-origin-when-cross-origin">
+                                    </iframe>
+                            {% else %}
+                                    <video controls class="preview-video video-fluid">
+                                    <source src="{{ course.promo_video_url }}" type="video/mp4">
+                                </video>
+                                {% endif %}
+                            {% else %}
+                                <div class="video-locked-message" style="padding: 60px 20px; text-align: center; background: #f8f9fa; border-radius: 12px; border: 2px solid #e0e0e0;">
+                                    <h3 style="margin-bottom: 15px; color: #333;">🔒 Video Locked</h3>
+                                    <p style="margin-bottom: 25px; color: #666; font-size: 16px;">You must enroll in this course to access the preview video.</p>
+                                    <form method="post" action="{% url 'enrollments:enroll' course.slug %}" style="display: inline-block;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;">
+                                            Enroll Now
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- What You'll Learn -->
+                    {% if learning_points %}
+                    <div class="content-section">
+                        <h3 class="section-heading">What you'll learn</h3>
+                        <ul class="learn-list">
+                            {% for point in learning_points %}
+                            <li class="learn-item">
+                                <svg class="check-mark" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M16.667 5L7.5 14.167 3.333 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>{{ point }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Course Description -->
+                    {% if course.description %}
+                    <div class="content-section">
+                        <h3 class="section-heading">About this course</h3>
+                        <div class="description-text">
+                            {{ course.description|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Curriculum -->
+                    <div class="content-section">
+                        <h3 class="section-heading">Course Curriculum</h3>
+                        <div class="curriculum-list">
+                            {% for lesson in lessons %}
+                            <div class="curriculum-item">
+                                <div class="lesson-number">{{ lesson.order }}</div>
+                                <div class="lesson-content">
+                                    <h4 class="lesson-name">{{ lesson.title }}</h4>
+                                </div>
+                                {% if is_enrolled or is_instructor_owner %}
+                                    <a href="{% url 'courses:lesson' course.slug lesson.pk %}" class="lesson-button">
+                                        Watch
+                                    </a>
+                                {% else %}
+                                    <span class="lesson-locked-icon">🔒</span>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <p class="no-lessons">No lessons available yet.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Instructor -->
+                    <div class="content-section">
+                        <h3 class="section-heading">Instructor</h3>
+                        <div class="instructor-box">
+                            <div class="instructor-avatar-circle">
+                                {{ course.instructor.get_full_name|default:course.instructor.username|first|upper }}
+                            </div>
+                            <div class="instructor-info">
+                                <h4 class="instructor-name">{{ course.instructor.get_full_name|default:course.instructor.username }}</h4>
+                                <p class="instructor-role">Course Instructor</p>
+                                <p class="instructor-courses">{{ course.instructor.courses.count }} Course{{ course.instructor.courses.count|pluralize }}</p>
+                                <a href="{% url 'courses:instructor_profile' course.instructor.username %}" class="instructor-link">View Profile →</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if is_instructor_owner %}
+                    <div class="instructor-actions">
+                        <a href="{% url 'courses:manage' course.slug %}" class="action-btn primary">Manage Course</a>
+                        <a href="{% url 'courses:edit' course.slug %}" class="action-btn secondary">Edit Course</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Sidebar -->
+                <div class="course-sidebar">
+                    <div class="purchase-box">
+                        {% if course.thumbnail %}
+                        <div class="course-thumb">
+                            <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                        </div>
+                        {% endif %}
+                        
+                        <div class="price-box">
+                                {% if course.discounted_price and course.discounted_price < course.price %}
+                                    <div class="price-row">
+                                    <span class="price-old">₹{{ course.price|floatformat:2 }}</span>
+                                    <span class="price-main">₹{{ course.discounted_price|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="discount-tag">
+                                        {% widthratio course.discounted_price course.price 100 as discount_percent %}
+                                        {% with discount=100|add:"-"|add:discount_percent %}
+                                        Save {{ discount|floatformat:0 }}%
+                                        {% endwith %}
+                                    </div>
+                                {% else %}
+                                <div class="price-main">₹{{ course.price|floatformat:2 }}</div>
+                            {% endif %}
+                        </div>
+
+                        {% if not is_instructor_owner %}
+                            {% if is_enrolled %}
+                                <a href="{% url 'courses:lesson' course.slug lessons.first.pk %}" class="enroll-button enrolled">
+                                    Continue Learning
+                                </a>
+                            {% else %}
+                                <form method="post" action="{% url 'enrollments:enroll' course.slug %}" class="enroll-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="enroll-button">
+                                        Enroll Now
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+
+                        <div class="features-box">
+                            <div class="feature-row">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>Lifetime access</span>
+                            </div>
+                            <div class="feature-row">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>Certificate of completion</span>
+                            </div>
+                            <div class="feature-row">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>30-day money-back guarantee</span>
+                            </div>
+                        </div>
+
+                        <div class="includes-box">
+                            <p class="includes-title">This course includes:</p>
+                            <ul class="includes-list">
+                                <li>{{ lessons.count }} on-demand lessons</li>
+                                <li>Full lifetime access</li>
+                                <li>Certificate of completion</li>
+                                <li>Mobile and desktop access</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {% if related_courses %}
+                    <div class="related-box">
+                        <h4 class="related-heading">Students also viewed</h4>
+                        {% for related in related_courses %}
+                        <div class="related-item">
+                            {% if related.thumbnail %}
+                                <img src="{{ related.thumbnail.url }}" alt="{{ related.title }}" class="related-img">
+                            {% endif %}
+                            <div class="related-info">
+                                <a href="{% url 'courses:detail' related.slug %}" class="related-title">{{ related.title|truncatewords:8 }}</a>
+                                <p class="related-author">By {{ related.instructor.get_full_name|default:related.instructor.username }}</p>
+                                <p class="related-price">
+                                    ₹{{ related.price|floatformat:2 }}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

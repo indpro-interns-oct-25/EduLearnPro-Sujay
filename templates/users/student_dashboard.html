@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="student-dashboard-page">
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header-section">
+            <div class="dashboard-header-content">
+                <h1 class="dashboard-title">My Dashboard</h1>
+                <p class="dashboard-subtitle">Track your learning progress and achievements</p>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="dashboard-stats-grid">
+            <div class="dashboard-stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ total_enrolled }}</div>
+                    <div class="stat-label">Enrolled Courses</div>
+                </div>
+            </div>
+
+            <div class="dashboard-stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ completed_count }}</div>
+                    <div class="stat-label">Completed Courses</div>
+                </div>
+            </div>
+
+            <div class="dashboard-stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ total_progress }}%</div>
+                    <div class="stat-label">Overall Progress</div>
+                </div>
+            </div>
+
+            <div class="dashboard-stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1.5-2s-1.5.62-1.5 2a2.5 2.5 0 0 0 2.5 2.5z"/>
+                        <path d="M14.5 14.5A2.5 2.5 0 0 0 17 12c0-1.38-.5-2-1.5-2s-1.5.62-1.5 2a2.5 2.5 0 0 0 2.5 2.5z"/>
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ total_lessons_completed }}</div>
+                    <div class="stat-label">Lessons Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Streak Tracking Section -->
+        <div class="streak-section">
+            <div class="streak-card">
+                <div class="streak-header">
+                    <div class="streak-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.657 18.657A8 8 0 0 1 4.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0 1 20 13a7.975 7.975 0 0 1-2.343 5.657z"/>
+                            <path d="M9.879 16.121A3 3 0 1 1 12.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+                        </svg>
+                    </div>
+                    <div class="streak-info">
+                        <h2 class="streak-title">Learning Streak</h2>
+                        <p class="streak-subtitle">Keep your momentum going!</p>
+                    </div>
+                </div>
+                <div class="streak-stats">
+                    <div class="streak-stat-item">
+                        <div class="streak-value">{{ current_streak }}</div>
+                        <div class="streak-label">Current Streak</div>
+                        <div class="streak-unit">days</div>
+                    </div>
+                    <div class="streak-divider"></div>
+                    <div class="streak-stat-item">
+                        <div class="streak-value">{{ longest_streak }}</div>
+                        <div class="streak-label">Longest Streak</div>
+                        <div class="streak-unit">days</div>
+                    </div>
+                </div>
+                {% if current_streak > 0 %}
+                <div class="streak-progress">
+                    <div class="streak-progress-label">Next milestone: {{ current_streak|add:1 }} days</div>
+                    <div class="streak-progress-bar">
+                        <div class="streak-progress-fill" style="width: {% widthratio current_streak current_streak|add:1 100 %}%"></div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="streak-encouragement">
+                    <p>Start your learning streak today! Complete a lesson to begin.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="dashboard-main-content">
+            <!-- In Progress Courses -->
+            {% if in_progress_courses %}
+            <div class="dashboard-section">
+                <div class="section-header-dashboard">
+                    <h2 class="section-title-dashboard">Continue Learning</h2>
+                    <span class="section-count">{{ in_progress_courses|length }} course{{ in_progress_courses|length|pluralize }}</span>
+                </div>
+                <div class="learning-courses-list">
+                    {% for enrollment in in_progress_courses %}
+                        <div class="learning-course-item">
+                            <div class="learning-course-thumbnail">
+                                {% if enrollment.course.thumbnail %}
+                                    <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}">
+                                {% else %}
+                                    <div class="course-placeholder-small">No Image</div>
+                                {% endif %}
+                            </div>
+                            <div class="learning-course-info">
+                                <div class="learning-course-header">
+                                    <h3 class="learning-course-title">
+                                        <a href="{% url 'courses:detail' enrollment.course.slug %}">{{ enrollment.course.title }}</a>
+                                    </h3>
+                                    <div class="learning-course-progress-badge">
+                                        <span class="progress-percentage">{{ enrollment.progress|floatformat:0 }}%</span>
+                                    </div>
+                                </div>
+                                <div class="learning-course-meta">
+                                    <div class="learning-meta-item">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                        </svg>
+                                        <span>{{ enrollment.course.lessons.count }} lessons</span>
+                                    </div>
+                                    <div class="learning-meta-item">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        <span>{{ enrollment.course.duration|default:"N/A" }}</span>
+                                    </div>
+                                </div>
+                                <div class="learning-progress-section">
+                                    <div class="learning-progress-header">
+                                        <span class="progress-label">Your Progress</span>
+                                        <span class="progress-stats">{{ enrollment.course.lessons.count }} total lessons</span>
+                                    </div>
+                                    <div class="learning-progress-bar-container">
+                                        <div class="learning-progress-bar">
+                                            <div class="learning-progress-fill" style="width: {{ enrollment.progress }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if enrollment.next_lesson %}
+                                <div class="learning-next-lesson">
+                                    <div class="next-lesson-info">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="9 18 15 12 9 6"/>
+                                        </svg>
+                                        <div class="next-lesson-text">
+                                            <span class="next-lesson-label">Next Lesson:</span>
+                                            <span class="next-lesson-name">{{ enrollment.next_lesson.title }}</span>
+                                        </div>
+                                    </div>
+                                    <a href="{% url 'courses:lesson' enrollment.course.slug enrollment.next_lesson.pk %}" class="btn btn-sm btn-primary continue-btn">
+                                        Continue Learning
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="learning-course-actions">
+                                    <a href="{% url 'courses:detail' enrollment.course.slug %}" class="btn btn-sm btn-primary">View Course</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Achievements Section -->
+            <div class="dashboard-section">
+                <div class="section-header-dashboard">
+                    <h2 class="section-title-dashboard">Achievements</h2>
+                    <span class="section-count">{{ achievements|length }} unlocked</span>
+                </div>
+                {% if achievements %}
+                    <div class="achievements-grid">
+                        {% for achievement in achievements %}
+                            <div class="achievement-card">
+                                <div class="achievement-icon">
+                                    {% if achievement.achievement_type == 'streak_7' or achievement.achievement_type == 'streak_30' or achievement.achievement_type == 'streak_100' %}
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M17.657 18.657A8 8 0 0 1 4.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0 1 20 13a7.975 7.975 0 0 1-2.343 5.657z"/>
+                                            <path d="M9.879 16.121A3 3 0 1 1 12.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+                                        </svg>
+                                    {% elif achievement.achievement_type == 'first_course' %}
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                        </svg>
+                                    {% elif achievement.achievement_type == 'course_complete' %}
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    {% else %}
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                    {% endif %}
+                                </div>
+                                <div class="achievement-content">
+                                    <h3 class="achievement-name">{{ achievement.get_achievement_type_display }}</h3>
+                                    <p class="achievement-date">{{ achievement.unlocked_at|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state-card">
+                        <div class="empty-state-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <h3 class="empty-state-title">No achievements yet</h3>
+                        <p class="empty-state-text">Complete courses and maintain your streak to unlock achievements!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Completed Courses -->
+            {% if completed_courses %}
+            <div class="dashboard-section">
+                <div class="section-header-dashboard">
+                    <h2 class="section-title-dashboard">Completed Courses</h2>
+                    <span class="section-count">{{ completed_courses|length }} course{{ completed_courses|length|pluralize }}</span>
+                </div>
+                <div class="courses-grid-dashboard">
+                    {% for enrollment in completed_courses %}
+                        <div class="course-card-dashboard completed">
+                            <div class="course-card-image">
+                                {% if enrollment.course.thumbnail %}
+                                    <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}">
+                                {% else %}
+                                    <div class="course-placeholder">No Image</div>
+                                {% endif %}
+                                <div class="course-completed-badge">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    Completed
+                                </div>
+                            </div>
+                            <div class="course-card-content">
+                                <h3 class="course-card-title">
+                                    <a href="{% url 'courses:detail' enrollment.course.slug %}">{{ enrollment.course.title }}</a>
+                                </h3>
+                                <p class="course-card-description">{{ enrollment.course.description|truncatewords:15|default:"No description available." }}</p>
+                                <a href="{% url 'courses:detail' enrollment.course.slug %}" class="btn btn-sm btn-primary">Review Course</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recommendations Section -->
+            {% if recommendations %}
+            <div class="dashboard-section">
+                <div class="section-header-dashboard">
+                    <h2 class="section-title-dashboard">Recommended for You</h2>
+                    <span class="section-count">{{ recommendations|length }} course{{ recommendations|length|pluralize }}</span>
+                </div>
+                <div class="courses-grid-dashboard">
+                    {% for course in recommendations %}
+                        <div class="course-card-dashboard">
+                            <div class="course-card-image">
+                                {% if course.thumbnail %}
+                                    <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                                {% else %}
+                                    <div class="course-placeholder">No Image</div>
+                                {% endif %}
+                            </div>
+                            <div class="course-card-content">
+                                <h3 class="course-card-title">
+                                    <a href="{% url 'courses:detail' course.slug %}">{{ course.title }}</a>
+                                </h3>
+                                <p class="course-card-description">{{ course.description|truncatewords:15|default:"No description available." }}</p>
+                                <div class="course-card-meta">
+                                    <span class="course-level">{{ course.get_level_display }}</span>
+                                    <span class="course-price">
+                                        {% if course.discounted_price and course.discounted_price < course.price %}
+                                            <span class="price-old">₹{{ course.price|floatformat:2 }}</span>
+                                            ₹{{ course.discounted_price|floatformat:2 }}
+                                        {% else %}
+                                            ₹{{ course.price|floatformat:2 }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <a href="{% url 'courses:detail' course.slug %}" class="btn btn-sm btn-primary">View Course</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

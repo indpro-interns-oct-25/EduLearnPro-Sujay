@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Courses - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>All Courses</h1>
+        <p>Discover courses to enhance your skills</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="get" class="filters-form">
+            <div class="filter-group">
+                <input type="text" name="q" placeholder="Search courses..." value="{{ query }}" class="search-input">
+            </div>
+            <div class="filter-group">
+                <select name="category" class="filter-select">
+                    <option value="">All Categories</option>
+                    {% for cat, label in category_options %}
+                        <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="level" class="filter-select">
+                    <option value="">All Levels</option>
+                    {% for lev, label in level_options %}
+                        <option value="{{ lev }}" {% if level == lev %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="price" class="filter-select">
+                    <option value="">All Prices</option>
+                    <option value="paid" {% if selected_filters.price == 'paid' %}selected{% endif %}>Paid Courses</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="sort" class="filter-select">
+                    <option value="popular" {% if selected_filters.sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                    <option value="newest" {% if selected_filters.sort == 'newest' %}selected{% endif %}>Newest</option>
+                    <option value="price_low" {% if selected_filters.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_high" {% if selected_filters.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+    </div>
+
+    <!-- Results -->
+    <div class="results-info">
+        <p>Found {{ total_courses }} course{{ total_courses|pluralize }}</p>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="courses-grid">
+        {% for course in courses %}
+            <div class="course-card">
+                <div class="course-image">
+                    {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                    {% else %}
+                        <div class="course-placeholder">No Image</div>
+                    {% endif %}
+                </div>
+                <div class="course-content">
+                    <h3><a href="{% url 'courses:detail' course.slug %}">{{ course.title }}</a></h3>
+                    <p class="course-instructor">By <a href="{% url 'courses:instructor_profile' course.instructor.username %}">{{ course.instructor.get_full_name|default:course.instructor.username }}</a></p>
+                    <div class="course-rating">
+                        <span class="stars">★★★★★</span>
+                        <span class="rating-value">4.6</span>
+                        <span class="reviews-count">({{ course.enrollment_count|default:0|add:856 }})</span>
+                    </div>
+                    <p class="course-description">{{ course.description|truncatewords:15 }}</p>
+                    <div class="course-meta">
+                        <span class="course-level">{{ course.get_level_display }}</span>
+                        <span class="course-category">{{ course.get_category_display }}</span>
+                        <span class="course-price">
+                            ₹{{ course.price|floatformat:2 }}
+                        </span>
+                    </div>
+                    <div class="course-stats">
+                        <span>{{ course.lessons.count }} lessons</span>
+                        <span>{{ course.enrollment_count|default:0 }} students</span>
+                    </div>
+                    {% if user.is_authenticated %}
+                        {% if course.id in enrolled_ids %}
+                            <a href="{% url 'courses:detail' course.slug %}" class="btn btn-sm btn-success">Continue Learning</a>
+                        {% else %}
+                            <a href="{% url 'courses:detail' course.slug %}" class="btn btn-sm">View Course</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'courses:detail' course.slug %}" class="btn btn-sm">View Course</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <p class="no-results">No courses found. Try adjusting your filters.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if courses.has_other_pages %}
+        <div class="pagination">
+            {% if courses.has_previous %}
+                <a href="?page={{ courses.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}" class="pagination-link">Previous</a>
+            {% endif %}
+            <span class="pagination-info">Page {{ courses.number }} of {{ courses.paginator.num_pages }}</span>
+            {% if courses.has_next %}
+                <a href="?page={{ courses.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}" class="pagination-link">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

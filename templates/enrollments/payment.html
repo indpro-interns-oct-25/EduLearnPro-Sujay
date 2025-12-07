@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+    <div class="container">
+        <div class="payment-layout">
+            <!-- Course Summary -->
+            <div class="auth-card payment-card">
+                <h2 class="payment-heading">Course Summary</h2>
+                <div class="payment-course-card">
+                    {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="payment-course-thumb">
+                    {% endif %}
+                    <div class="payment-course-content">
+                        <h3>{{ course.title }}</h3>
+                        <p>By {{ course.instructor.get_full_name|default:course.instructor.username }}</p>
+                        <div class="payment-course-meta">
+                            <span>{{ course.lessons.count }} lessons</span>
+                            <span>{{ course.get_level_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-price-card">
+                    <div class="payment-price-row">
+                        <span>Course Price</span>
+                        <span>₹{{ original_price|floatformat:2 }}</span>
+                    </div>
+                    {% if has_discount %}
+                    <div class="payment-price-row payment-price-discount">
+                        <span>Discount</span>
+                        <span>-₹{{ original_price|add:"-"|add:course.discounted_price|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="payment-price-row payment-price-total">
+                        <span>Total</span>
+                        <span>₹{{ final_price|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="auth-card payment-card">
+                <h2 class="payment-heading">Payment Details</h2>
+
+                <form method="post" action="{% url 'enrollments:process-payment' course.slug %}" class="payment-form" id="paymentForm">
+                    {% csrf_token %}
+
+                    <div class="form-section">
+                        <h3>Payment Method</h3>
+                        <div class="payment-methods">
+                            <label class="payment-method-option">
+                                <input type="radio" name="payment_method" value="card" checked>
+                                <div class="method-content">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                        <line x1="1" y1="10" x2="23" y2="10"/>
+                                    </svg>
+                                    <span>Credit/Debit Card</span>
+                                </div>
+                            </label>
+                            <label class="payment-method-option">
+                                <input type="radio" name="payment_method" value="paypal">
+                                <div class="method-content">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    <span>PayPal</span>
+                                </div>
+                            </label>
+                            <label class="payment-method-option">
+                                <input type="radio" name="payment_method" value="wallet">
+                                <div class="method-content">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                    </svg>
+                                    <span>Digital Wallet</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="cardDetails">
+                        <h3>Card Information</h3>
+                        <div class="form-group">
+                            <label for="card_number">Card Number</label>
+                            <input type="text" id="card_number" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expiry_date">Expiry Date</label>
+                                <input type="text" id="expiry_date" name="expiry_date" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv">CVV</label>
+                                <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="4" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cardholder_name">Cardholder Name</label>
+                            <input type="text" id="cardholder_name" name="cardholder_name" placeholder="John Doe" value="{{ user.get_full_name|default:user.username }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Billing Address</h3>
+                        <div class="form-group">
+                            <label for="billing_address">Address</label>
+                            <input type="text" id="billing_address" name="billing_address" placeholder="123 Main Street" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" id="city" name="city" placeholder="New York" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="zip_code">ZIP Code</label>
+                                <input type="text" id="zip_code" name="zip_code" placeholder="10001" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country</label>
+                            <input type="text" id="country" name="country" placeholder="United States" required>
+                        </div>
+                    </div>
+
+                    <div class="payment-security-note">
+                        <div class="security-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="M9 12l2 2 4-4"/>
+                            </svg>
+                            <span>Secure Payment - SSL Encrypted</span>
+                        </div>
+                    </div>
+
+                    <div class="payment-actions">
+                        <button type="submit" class="btn btn-primary btn-lg" id="payButton">
+                            Pay ₹{{ final_price|floatformat:2 }}
+                        </button>
+                        <a href="{% url 'courses:detail' course.slug %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-page {
+    padding: 40px 0 60px;
+    position: relative;
+}
+
+.payment-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(164, 53, 240, 0.12) 0%, transparent 55%),
+        radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.1) 0%, transparent 55%);
+    pointer-events: none;
+}
+
+.payment-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 2rem;
+}
+
+.payment-card {
+    position: relative;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.65);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.35), 0 10px 35px rgba(0, 0, 0, 0.4);
+    padding: 1.25rem;
+}
+
+.payment-heading {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.payment-course-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.payment-course-thumb {
+    width: 100%;
+    max-height: 320px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.payment-course-content h3 {
+    margin: 0 0 0.35rem 0;
+    color: var(--text-primary);
+}
+
+.payment-course-content p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.payment-course-meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.payment-price-card {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 1rem;
+}
+
+.payment-price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.payment-price-discount {
+    color: #34d399;
+}
+
+.payment-price-total {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.payment-method-option {
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.payment-method-option:hover {
+    border-color: var(--primary-gold);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.payment-method-option input[type="radio"] {
+    margin-right: 14px;
+    width: 18px;
+    height: 18px;
+}
+
+.payment-method-option input[type="radio"]:checked + .method-content {
+    color: var(--primary-accent);
+}
+
+.method-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.method-content svg {
+    color: currentColor;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--text-primary);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.payment-security-note {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+}
+
+.security-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #34d399;
+    font-size: 0.9rem;
+}
+
+.payment-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 968px) {
+    .payment-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Format card number
+document.getElementById('card_number')?.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    e.target.value = formattedValue;
+});
+
+// Format expiry date
+document.getElementById('expiry_date')?.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    e.target.value = value;
+});
+
+// Show/hide card details based on payment method
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const cardDetails = document.getElementById('cardDetails');
+        if (this.value === 'card') {
+            cardDetails.style.display = 'block';
+            document.querySelectorAll('#cardDetails input').forEach(input => {
+                input.required = true;
+            });
+        } else {
+            cardDetails.style.display = 'none';
+            document.querySelectorAll('#cardDetails input').forEach(input => {
+                input.required = false;
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+

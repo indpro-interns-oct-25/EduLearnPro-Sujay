@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - EduLearnPro{% endblock %}
+
+{% block content %}
+<style>
+.hero-section {
+    padding: 2rem 0 4rem !important;
+    min-height: auto !important;
+    align-items: flex-start !important;
+}
+
+.hero-section .container {
+    padding-top: 1rem !important;
+}
+</style>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1>Learn Skills. <span class="highlight">Build Your Future.</span></h1>
+        <p class="hero-subtitle">Transform your career with world-class courses from industry experts. Join thousands of learners advancing their skills every day.</p>
+        
+        <!-- Search Bar -->
+        <div class="hero-search">
+            <form action="{% url 'courses:list' %}" method="get">
+                <input type="text" name="search" placeholder="Search for courses, skills, or instructors..." autocomplete="off">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        
+        <div class="hero-actions">
+            <a href="{% url 'courses:list' %}" class="btn btn-primary">Explore Courses</a>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'users:register' %}" class="btn btn-secondary">Get Started Free</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Trending Courses Section -->
+<section class="trending-courses-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Trending Courses</h2>
+            <p>Most popular courses chosen by thousands of learners</p>
+        </div>
+        <div class="courses-grid">
+            {% for course in courses|slice:":8" %}
+                <div class="course-card">
+                    <div class="course-image">
+                        {% if course.thumbnail %}
+                            <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                        {% else %}
+                            <div class="course-placeholder">No Image</div>
+                        {% endif %}
+                    </div>
+                    <div class="course-content">
+                        <h3><a href="{% url 'courses:detail' course.slug %}">{{ course.title }}</a></h3>
+                        <p class="course-instructor">By <a href="{% url 'courses:instructor_profile' course.instructor.username %}">{{ course.instructor.get_full_name|default:course.instructor.username }}</a></p>
+                        <div class="course-rating">
+                            <span class="stars">★★★★★</span>
+                            <span class="rating-value">4.7</span>
+                            <span class="reviews-count">({{ course.enrollment_count|default:0|add:1234 }})</span>
+                        </div>
+                        <p class="course-description">{{ course.description|truncatewords:20 }}</p>
+                        <div class="course-meta">
+                            <span class="course-level">{{ course.get_level_display }}</span>
+                            <span class="course-price">
+                                {% if course.price %}
+                                    ₹{{ course.price|floatformat:2 }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="course-stats">
+                            <span>{{ course.lessons.count }} lessons</span>
+                            <span>{{ course.enrollment_count|default:0 }} students</span>
+                        </div>
+                        <a href="{% url 'courses:detail' course.slug %}" class="btn btn-sm btn-primary" style="margin-top: 1rem;">View Course</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <p style="font-size: 1.2rem;">No courses available yet. Check back soon!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="why-choose-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Why Choose EduLearnPro</h2>
+            <p>Experience world-class education designed for your success</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">🎓</div>
+                <h3>Learn Anytime</h3>
+                <p>Access courses on any device, anytime. Study at your own pace with lifetime access to all materials.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">👨‍🏫</div>
+                <h3>Industry Experts</h3>
+                <p>Learn from industry professionals and thought leaders with years of real-world experience.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🏆</div>
+                <h3>Certificates</h3>
+                <p>Earn industry-recognized certificates upon course completion to boost your career prospects.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💬</div>
+                <h3>Community Support</h3>
+                <p>Join a vibrant community of learners, get help, and network with peers worldwide.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>What Our Students Say</h2>
+            <p>Join thousands of satisfied learners who have transformed their careers</p>
+        </div>
+        <div class="testimonials-slider" id="testimonialsSlider">
+            <div class="testimonial-card">
+                <div class="testimonial-avatar">SM</div>
+                <div class="testimonial-rating">★★★★★</div>
+                <p class="testimonial-text">"EduLearnPro has completely transformed my learning experience. The courses are well-structured, and the instructors are experts in their fields. I've gained valuable skills that helped me advance in my career."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-info">
+                        <h4>Sarah Mitchell</h4>
+                        <p>Software Engineer at Google</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-avatar">JD</div>
+                <div class="testimonial-rating">★★★★★</div>
+                <p class="testimonial-text">"The quality of content here is outstanding. I've taken multiple courses and each one exceeded my expectations. The platform is user-friendly and the support is excellent."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-info">
+                        <h4>James Davis</h4>
+                        <p>Marketing Manager at Microsoft</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-avatar">EW</div>
+                <div class="testimonial-rating">★★★★★</div>
+                <p class="testimonial-text">"As a busy professional, I appreciate the flexibility EduLearnPro offers. I can learn at my own pace and the mobile-friendly interface makes it easy to study on the go."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-info">
+                        <h4>Emily Wilson</h4>
+                        <p>Business Analyst at Amazon</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-avatar">MR</div>
+                <div class="testimonial-rating">★★★★★</div>
+                <p class="testimonial-text">"The instructors are phenomenal and the course materials are top-notch. I've recommended EduLearnPro to all my colleagues looking to upskill."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-info">
+                        <h4>Michael Rodriguez</h4>
+                        <p>Product Designer at Apple</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-avatar">LT</div>
+                <div class="testimonial-rating">★★★★★</div>
+                <p class="testimonial-text">"I've completed 5 courses on EduLearnPro and each one has been exceptional. The hands-on projects and real-world examples make learning practical and engaging. Highly recommend!"</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-info">
+                        <h4>Lisa Thompson</h4>
+                        <p>Data Scientist at Netflix</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-avatar">RK</div>
+                <div class="testimonial-rating">★★★★★</div>
+                <p class="testimonial-text">"The certificate I earned helped me land my dream job! The courses are comprehensive and the instructors provide excellent support. Worth every penny!"</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-info">
+                        <h4>Robert Kim</h4>
+                        <p>Full Stack Developer at Meta</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-avatar">AJ</div>
+                <div class="testimonial-rating">★★★★★</div>
+                <p class="testimonial-text">"EduLearnPro's community is amazing! I've connected with fellow learners and the discussion forums are incredibly helpful. The learning experience goes beyond just watching videos."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-info">
+                        <h4>Amanda Johnson</h4>
+                        <p>UX Designer at Adobe</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-avatar">DC</div>
+                <div class="testimonial-rating">★★★★★</div>
+                <p class="testimonial-text">"The best investment I've made in my career. The courses are updated regularly with the latest industry trends. I feel confident applying what I've learned in my work."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-info">
+                        <h4>David Chen</h4>
+                        <p>DevOps Engineer at AWS</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to Start Learning?</h2>
+            <p>Join over 100,000 students already learning on EduLearnPro. Start your journey today and unlock your potential.</p>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'users:register' %}" class="cta-button">Start Learning Today</a>
+            {% else %}
+                <a href="{% url 'courses:list' %}" class="cta-button">Browse Courses</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Premium Footer -->
+<footer class="premium-footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h4>EduLearnPro</h4>
+                <p>Transform your career with world-class online courses. Learn from industry experts and advance your skills.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Categories</h4>
+                <ul>
+                    <li><a href="{% url 'courses:list' %}">All Courses</a></li>
+                    <li><a href="#">Programming</a></li>
+                    <li><a href="#">Business</a></li>
+                    <li><a href="#">Design</a></li>
+                    <li><a href="#">Data Science</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Help Center</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                    <li><a href="#">Refund Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 EduLearnPro. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+// Cyclic Rotating Testimonials - Seamless Infinite Loop
+document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.querySelector('#testimonialsSlider');
+    if (!slider) return;
+    
+    const cards = Array.from(slider.querySelectorAll('.testimonial-card'));
+    const totalCards = cards.length;
+    if (totalCards === 0) return;
+    
+    // Clone cards for seamless forward scroll
+    cards.forEach(card => {
+        const clone = card.cloneNode(true);
+        slider.appendChild(clone);
+    });
+    // Prepend clones to allow seamless backward scroll
+    const firstCard = cards[0];
+    for (let i = totalCards - 1; i >= 0; i--) {
+        const clone = cards[i].cloneNode(true);
+        slider.insertBefore(clone, firstCard);
+    }
+    
+    const gap = parseInt(getComputedStyle(slider).columnGap || getComputedStyle(slider).gap || 32, 10) || 32;
+    const cardWidth = cards[0].offsetWidth + gap; // card width + gap
+    const loopWidth = cardWidth * totalCards;
+    // Start at first original card (after prepended clones)
+    slider.scrollLeft = loopWidth;
+    
+    let scrollPosition = loopWidth;
+    let isPaused = false;
+    let animationFrame;
+    const scrollSpeed = 0.5; // pixels per frame for smooth scroll
+    
+    function normalizePosition() {
+        // Keep scroll within middle set to preserve seamless loop in both directions
+        if (slider.scrollLeft <= loopWidth * 0.1) {
+            slider.scrollLeft += loopWidth;
+            scrollPosition = slider.scrollLeft;
+        } else if (slider.scrollLeft >= loopWidth * 1.9) {
+            slider.scrollLeft -= loopWidth;
+            scrollPosition = slider.scrollLeft;
+        }
+    }
+    
+    function animate() {
+        if (!isPaused) {
+            scrollPosition += scrollSpeed;
+            slider.scrollLeft = scrollPosition;
+            normalizePosition();
+        }
+        animationFrame = requestAnimationFrame(animate);
+    }
+    
+    // Pause on hover
+    slider.addEventListener('mouseenter', () => {
+        isPaused = true;
+    });
+    
+    slider.addEventListener('mouseleave', () => {
+        isPaused = false;
+    });
+    
+    // Normalize after manual scroll (e.g., mouse wheel drag)
+    slider.addEventListener('scroll', () => {
+        normalizePosition();
+    });
+    
+    // Touch/swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isTouching = false;
+    
+    slider.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+        isTouching = true;
+        isPaused = true;
+    });
+    
+    slider.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        isTouching = false;
+        handleSwipe();
+        setTimeout(() => {
+            if (!isTouching) {
+                isPaused = false;
+            }
+        }, 1000);
+    });
+    
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        if (touchEndX < touchStartX - swipeThreshold) {
+            scrollPosition += cardWidth;
+        } else if (touchEndX > touchStartX + swipeThreshold) {
+            scrollPosition -= cardWidth;
+        }
+        slider.scrollLeft = scrollPosition;
+        normalizePosition();
+    }
+    
+    // Start animation
+    animate();
+});
+</script>
+{% endblock %}

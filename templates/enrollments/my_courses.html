@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Courses - EduLearnPro{% endblock %}
+
+{% block content %}
+<div class="my-courses-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>My Courses</h1>
+            <p>Continue your learning journey</p>
+        </div>
+
+        <!-- Enrolled Courses -->
+        {% if enrolled_courses %}
+            <div class="courses-grid">
+                {% for enrollment in enrolled_courses %}
+                    <div class="course-card">
+                        <div class="course-image">
+                            {% if enrollment.course.thumbnail %}
+                                <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}">
+                            {% else %}
+                                <div class="course-placeholder">No Image</div>
+                            {% endif %}
+                            {% if enrollment.is_completed %}
+                                <div class="course-badge completed">Completed</div>
+                            {% else %}
+                                <div class="course-badge in-progress">In Progress</div>
+                            {% endif %}
+                        </div>
+                        <div class="course-content">
+                            <h3><a href="{% url 'courses:detail' enrollment.course.slug %}">{{ enrollment.course.title }}</a></h3>
+                            <p class="course-instructor">By <a href="{% url 'courses:instructor_profile' enrollment.course.instructor.username %}">{{ enrollment.course.instructor.get_full_name|default:enrollment.course.instructor.username }}</a></p>
+                            
+                            <!-- Progress Bar -->
+                            <div class="course-progress-section">
+                                <div class="progress-info">
+                                    <span class="progress-label">Progress</span>
+                                    <span class="progress-percentage">{{ enrollment.progress }}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ enrollment.progress }}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="course-meta">
+                                <span class="course-level">{{ enrollment.course.get_level_display }}</span>
+                                <span class="course-category">{{ enrollment.course.get_category_display }}</span>
+                            </div>
+
+                            <div class="course-stats">
+                                <span>{{ enrollment.course.lessons.count }} lessons</span>
+                                <span>Enrolled {{ enrollment.enrolled_at|timesince }} ago</span>
+                            </div>
+
+                            <div class="course-actions">
+                                {% if enrollment.is_completed %}
+                                    <a href="{% url 'enrollments:certificate' enrollment.course.slug %}" class="btn btn-sm btn-success">View Certificate</a>
+                                    <a href="{% url 'courses:lesson' enrollment.course.slug enrollment.course.lessons.first.pk %}" class="btn btn-sm btn-secondary">Review Course</a>
+                                {% else %}
+                                    {% with first_lesson=enrollment.course.lessons.first %}
+                                        {% if first_lesson %}
+                                            <a href="{% url 'courses:lesson' enrollment.course.slug first_lesson.pk %}" class="btn btn-sm btn-primary">Continue Learning</a>
+                                        {% else %}
+                                            <a href="{% url 'courses:detail' enrollment.course.slug %}" class="btn btn-sm btn-primary">View Course</a>
+                                        {% endif %}
+                                    {% endwith %}
+                                    <a href="{% url 'enrollments:progress' enrollment.course.slug %}" class="btn btn-sm btn-secondary">View Progress</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <h2>No Enrolled Courses Yet</h2>
+                <p>Start your learning journey by enrolling in a course!</p>
+                <a href="{% url 'courses:list' %}" class="btn btn-primary">Browse Courses</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.my-courses-page {
+    padding: 40px 0;
+    min-height: 60vh;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.course-card {
+    background: rgba(0, 0, 0, 0.65);
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.35), 0 10px 35px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.35), 0 15px 45px rgba(0, 0, 0, 0.5);
+}
+
+.course-image {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.course-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.course-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+}
+
+.course-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.course-badge.completed {
+    background: #10b981;
+    color: white;
+}
+
+.course-badge.in-progress {
+    background: #3b82f6;
+    color: white;
+}
+
+.course-content {
+    padding: 20px;
+}
+
+.course-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.25rem;
+}
+
+.course-content h3 a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.course-content h3 a:hover {
+    color: var(--primary-accent);
+}
+
+.course-instructor {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.course-instructor a {
+    color: var(--primary-accent);
+    text-decoration: none;
+}
+
+.course-progress-section {
+    margin: 15px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.progress-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.progress-percentage {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-accent) 0%, var(--primary-gold) 100%);
+    transition: width 0.3s ease;
+}
+
+.course-meta {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.course-meta span {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.course-stats {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.course-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.course-actions .btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state-icon {
+    margin-bottom: 20px;
+    color: var(--text-muted);
+}
+
+.empty-state h2 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .courses-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .course-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
